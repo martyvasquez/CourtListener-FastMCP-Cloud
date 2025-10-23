@@ -16,9 +16,12 @@ from app.config import config
 from app.tools import citation_server, get_server, search_server
 
 # Configure logging
-log_path = Path(__file__).parent / "logs" / "server.log"
-log_path.parent.mkdir(exist_ok=True)
-logger.add(log_path, rotation="1 MB", retention="1 week")
+# Note: File logging disabled for cloud deployment (read-only filesystem)
+# FastMCP Cloud captures stdout/stderr automatically
+# For local development, you can uncomment the file logging below:
+# log_path = Path(__file__).parent / "logs" / "server.log"
+# log_path.parent.mkdir(exist_ok=True)
+# logger.add(log_path, rotation="1 MB", retention="1 week")
 
 
 def get_version() -> str:
