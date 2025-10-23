@@ -130,11 +130,13 @@ async def _ensure_setup() -> None:
     if not _initialized:
         logger.info("Setting up CourtListener MCP server sub-servers")
         # FastMCP 2.0+ syntax: import_server(server, prefix=None)
+        # Using prefix for clarity: search_opinions, get_opinion, etc.
         await mcp.import_server(search_server, prefix="search")
         logger.info("Imported search server tools")
         await mcp.import_server(get_server, prefix="get")
         logger.info("Imported get server tools")
-        await mcp.import_server(citation_server, prefix="citation")
+        # Citation tools have no prefix for cleaner names
+        await mcp.import_server(citation_server)
         logger.info("Imported citation server tools")
         _initialized = True
         logger.info("Server setup complete - all sub-servers loaded")
