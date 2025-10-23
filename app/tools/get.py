@@ -157,7 +157,7 @@ async def docket(
 
 
 @get_server.tool()
-async def audio(
+async def audio_by_id(
     audio_id: Annotated[str, Field(description="The audio recording ID to retrieve")],
     ctx: Context | None = None,
 ) -> dict[str, Any]:
