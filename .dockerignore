@@ -18,10 +18,16 @@ build/
 .git/
 .gitignore
 .gitattributes
-README.md
-*.md
+# Don't exclude README.md - needed for package build
+# README.md
+# Keep deployment and tool documentation
+!README.md
+!app/README.md
+# Exclude other markdown files
+CHANGELOG*.md
+CONTRIBUTING.md
+FASTMCP_CLOUD_DEPLOYMENT.md
 LICENSE
-CHANGELOG*
 .editorconfig
 
 # IDE and editor files
