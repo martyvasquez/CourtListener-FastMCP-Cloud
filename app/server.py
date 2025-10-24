@@ -477,6 +477,133 @@ async def find_precedents_prompt(
     ]
 
 
+@mcp.prompt(
+    name="semantic-vs-keyword-search",
+    description="Guide for choosing between semantic and keyword search",
+)
+async def semantic_vs_keyword_prompt() -> list[str]:
+    """Generate a prompt explaining when to use semantic vs keyword search."""
+    return [
+        "CHOOSING BETWEEN SEMANTIC AND KEYWORD SEARCH",
+        "",
+        "CourtListener provides two powerful search methods. Choose based on your query type:",
+        "",
+        "USE SEMANTIC SEARCH (semantic_search tool) when:",
+        "  - You have a natural language question (e.g., 'What are the legal standards for search warrants?')",
+        "  - You're researching a concept or topic (e.g., 'cases about environmental protection')",
+        "  - You want to find similar cases by meaning, not exact words",
+        "  - You're doing exploratory research and don't know exact legal terms",
+        "  - Your query is conversational (e.g., 'How do courts treat police use of force?')",
+        "",
+        "USE KEYWORD SEARCH (opinions tool) when:",
+        "  - You know the specific case name or citation (e.g., 'Brown v. Board of Education')",
+        "  - You're searching for exact legal terms or phrases (e.g., 'qualified immunity')",
+        "  - You need Boolean queries with AND/OR/NOT operators",
+        "  - You want field-specific searches (e.g., caseName:\"Smith\" judge:\"Roberts\")",
+        "  - You're looking for specific statute numbers, code sections, or precise terminology",
+        "",
+        "SEARCH CAPABILITIES:",
+        "  - Both methods support: court filters, date ranges, citation counts, result limits",
+        "  - Both return: highlighted snippets with <mark> tags, full metadata, relevance scores",
+        "  - Semantic search uses: Citegeist Relevancy Engine for contextual understanding",
+        "  - Keyword search uses: BM25 algorithm for exact term matching",
+        "",
+        "BEST PRACTICES:",
+        "  1. For known cases: always use keyword search (opinions tool)",
+        "  2. For legal concepts: start with semantic search (semantic_search tool)",
+        "  3. For comprehensive research: use both methods and compare results",
+        "  4. Review highlighted snippets to verify relevance",
+    ]
+
+
+@mcp.prompt(
+    name="natural-language-search",
+    description="Example workflow for semantic/natural language legal research",
+)
+async def natural_language_search_prompt(
+    research_question: _Annotated[str, _Field(description="The natural language research question")],
+    court_filter: _Annotated[str, _Field(description="Optional court filter")] = "",
+) -> list[str]:
+    """Generate a prompt for semantic search workflow."""
+    messages = [
+        f"SEMANTIC SEARCH WORKFLOW: {research_question}",
+        "",
+        "STEP 1: Initial Semantic Search",
+        f"  - Use 'semantic_search' tool with natural_query: '{research_question}'",
+    ]
+    if court_filter:
+        messages.append(f"  - Filter by court: '{court_filter}'")
+    messages.extend([
+        "  - Set limit to 20 for good coverage",
+        "  - Sort by 'score desc' to get most semantically relevant cases first",
+        "",
+        "STEP 2: Review Highlighted Snippets",
+        "  - Examine the <mark> tags in returned snippets",
+        "  - Identify which results are truly relevant to your question",
+        "  - Note the semantic similarity scores",
+        "",
+        "STEP 3: Refine if Needed",
+        "  - If results are too broad: add date filters or citation count filters",
+        "  - If not enough results: try rephrasing your question in different words",
+        "  - Consider related concepts the search may have missed",
+        "",
+        "STEP 4: Deep Dive on Top Results",
+        "  - Use resource templates to get full opinion text for most relevant cases",
+        "  - Extract key holdings, reasoning, and citations from top 3-5 results",
+        "",
+        "STEP 5: Synthesize Findings",
+        "  - Summarize the legal standards across multiple relevant cases",
+        "  - Note any trends, splits in authority, or evolving doctrines",
+        "  - Provide citations to the most important cases found",
+    ])
+    return messages
+
+
+@mcp.prompt(
+    name="keyword-search-guide",
+    description="Example workflow for keyword/Boolean legal research",
+)
+async def keyword_search_prompt(
+    search_terms: _Annotated[str, _Field(description="The keywords or Boolean query")],
+    court_filter: _Annotated[str, _Field(description="Optional court filter")] = "",
+) -> list[str]:
+    """Generate a prompt for keyword search workflow."""
+    messages = [
+        f"KEYWORD SEARCH WORKFLOW: {search_terms}",
+        "",
+        "STEP 1: Construct Precise Query",
+        f"  - Base query: '{search_terms}'",
+        "  - Consider Boolean operators: AND, OR, NOT",
+        "  - Use quotes for exact phrases: \"qualified immunity\"",
+        "  - Use field-specific searches: caseName:\"Smith\" judge:\"Roberts\"",
+        "",
+        "STEP 2: Execute Keyword Search",
+        f"  - Use 'opinions' tool with q: '{search_terms}'",
+    ]
+    if court_filter:
+        messages.append(f"  - Filter by court: '{court_filter}'")
+    messages.extend([
+        "  - Set appropriate filters (dates, judges, citation counts)",
+        "  - Sort by 'score desc' for BM25 relevance or 'dateFiled desc' for recency",
+        "",
+        "STEP 3: Analyze Match Quality",
+        "  - Examine <mark> tags to see which terms were matched",
+        "  - Check if matches are in important sections (holdings vs. dicta)",
+        "  - Review BM25 scores to gauge term frequency relevance",
+        "",
+        "STEP 4: Refine Query",
+        "  - Too many results? Add more specific terms or field filters",
+        "  - Too few results? Use broader terms or remove restrictive filters",
+        "  - Wrong results? Check for ambiguous terms that need context",
+        "",
+        "STEP 5: Retrieve Full Cases",
+        "  - Use resource templates for complete opinion text",
+        "  - Verify the context around highlighted matches",
+        "  - Extract precise holdings and citations for your research",
+    ])
+    return messages
+
+
 async def main() -> None:
     """Run the CourtListener MCP server with streamable-http transport."""
     # Ensure sub-servers are loaded before starting
