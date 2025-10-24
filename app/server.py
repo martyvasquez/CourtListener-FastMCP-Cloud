@@ -142,10 +142,73 @@ async def _ensure_setup() -> None:
         logger.info("Server setup complete - all sub-servers loaded")
 
 
+def _register_resources_and_prompts() -> None:
+    """Register resources and prompts after server initialization.
+
+    This happens after _ensure_setup() to avoid interfering with fastmcp inspect.
+    """
+    import os
+    import httpx
+    from typing import Annotated
+    from pydantic import Field
+    from fastmcp import Context
+
+    API_KEY = os.getenv("COURT_LISTENER_API_KEY")
+
+    # Register a sample resource template
+    @mcp.resource(
+        uri="courtlistener://opinions/{opinion_id}",
+        name="Opinion by ID",
+        description="Get a specific court opinion by ID",
+        mime_type="application/json",
+    )
+    async def get_opinion_resource(
+        opinion_id: Annotated[str, Field(description="The opinion ID")],
+        ctx: Context | None = None,
+    ) -> dict:
+        """Get opinion by ID."""
+        if not API_KEY:
+            raise ValueError("COURT_LISTENER_API_KEY not found")
+
+        headers = {"Authorization": f"Token {API_KEY}"}
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"https://www.courtlistener.com/api/rest/v4/opinions/{opinion_id}/",
+                headers=headers,
+                timeout=30.0,
+            )
+            response.raise_for_status()
+            return response.json()
+
+    # Register a sample prompt
+    @mcp.prompt(
+        name="verify-citation",
+        description="Multi-step citation verification workflow",
+    )
+    async def verify_citation(
+        citation: Annotated[str, Field(description="The citation to verify")],
+    ) -> list[str]:
+        """Citation verification prompt."""
+        return [
+            f"I need to verify this legal citation: {citation}",
+            "",
+            "Please perform these verification steps:",
+            f"1. Use 'verify_citation_format' tool to check if '{citation}' is valid",
+            f"2. Use 'parse_citation_with_citeurl' tool to parse '{citation}'",
+            f"3. Use 'lookup_citation' tool to find the actual case",
+            "4. Cross-reference all results and provide verification summary",
+        ]
+
+    logger.info("Registered resources and prompts")
+
+
 async def main() -> None:
     """Run the CourtListener MCP server with streamable-http transport."""
     # Ensure sub-servers are loaded before starting
     await _ensure_setup()
+
+    # Register resources and prompts (after inspection phase)
+    _register_resources_and_prompts()
 
     logger.info("Starting CourtListener MCP server with streamable-http transport")
     logger.info(
