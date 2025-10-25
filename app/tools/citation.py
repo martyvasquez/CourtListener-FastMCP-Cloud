@@ -91,7 +91,18 @@ async def lookup_citation(
                 timeout=30.0,
             )
             response.raise_for_status()
-            result: dict[str, Any] = response.json()
+            data = response.json()
+
+            # The API returns a list of citation results, wrap it in a dict
+            if isinstance(data, list):
+                result: dict[str, Any] = {
+                    "citation": citation,
+                    "results": data,
+                    "count": len(data)
+                }
+            else:
+                # If API changes to return dict, pass it through
+                result = data
 
             if ctx:
                 await ctx.info(f"Successfully looked up citation: {citation}")
@@ -172,7 +183,19 @@ async def batch_lookup_citations(
             )
             response.raise_for_status()
 
-            result = response.json()
+            data = response.json()
+
+            # The API returns a list of citation results, wrap it in a dict
+            if isinstance(data, list):
+                result: dict[str, Any] = {
+                    "citations_requested": citations,
+                    "citation_text": citation_text,
+                    "results": data,
+                    "count": len(data)
+                }
+            else:
+                # If API changes to return dict, pass it through
+                result = data
 
             if ctx:
                 await ctx.info(f"Successfully looked up {len(citations)} citations")
